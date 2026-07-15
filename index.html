@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- SEO Meta Tags -->
+    <title>Dhruvesh Gangapuram — Minimal Creative Portfolio</title>
+    <meta name="description" content="Portfolio of Dhruvesh Gangapuram, a Senior UI/UX Designer with a hybrid background in computer engineering, building pixel-perfect, highly animated digital experiences." />
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <style>
+      /* Prevent flash of unstyled content/colors */
+      html, body {
+        /* ; */
+        color: #111111;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Preloader Screen -->
+    <div class="loader-screen" id="loader-screen">
+      <div class="loader-text scramble-text" data-delay="0">Dhruvesh Gangapuram</div>
+    </div>
+
+    <!-- Fullscreen Video Background -->
+    <div class="video-bg-container">
+      <video id="bg-video" muted="muted" playsinline="playsinline" src="/intro.mp4"></video>
+      <canvas id="scroll-canvas"></canvas>
+      <div class="video-overlay"></div>
+    </div>
+
+    <!-- Custom Cursor -->
+    <div class="custom-cursor" id="custom-cursor"></div>
+    <div class="custom-cursor-dot" id="custom-cursor-dot"></div>
+
+    <!-- Navigation Header -->
+    <header class="header">
+      <a href="#" class="logo" id="header-logo">
+        <span class="logo-text">Dhruvesh Gangapuram</span>
+      </a>
+
+      <div class="nav-right">
+        <a href="mailto:gangapuramdhruvesh@gmail.com" class="btn-contact">Contact Us</a>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="home-grid">
+        <!-- Left Side: Years, Headers, Subtitle, CTAs -->
+        <div class="grid-left-side">
+          <div class="year-label top-year">2024</div>
+          
+          <div class="intro-block">
+            <span class="intro-accent-tag">&gt;&gt; Portfolio _ UI/UX Designer</span>
+            <h1 class="main-heading">DHRUVESH
+GANGAPURAM</h1>
+            <p class="main-desc">
+              A hybrid UI/UX Designer and Front-End Developer. Architecting pixel-perfect design systems, interactive prototypes, and buttery smooth digital experiences.
+            </p>
+            
+            <div class="cta-actions">
+              <a href="#work" class="btn btn-solid">View Selected Work</a>
+              <a href="mailto:gangapuramdhruvesh@gmail.com" class="btn btn-outline">About Portfolio</a>
+            </div>
+          </div>
+          
+          <div class="year-label bottom-year">2026</div>
+        </div>
+
+        <!-- Right Side: Navigation Menu list -->
+        <div class="grid-right-side">
+          <div class="disciplines-container">
+            <span class="list-heading">Menu</span>
+            <ul class="disciplines-list">
+              <li class="discipline-item active">
+                <span class="bullet">•</span>
+                <span class="text">About</span>
+              </li>
+              <li class="discipline-item">
+                <span class="bullet">•</span>
+                <span class="text">Experience</span>
+              </li>
+              <li class="discipline-item">
+                <span class="bullet">•</span>
+                <span class="text">Stats</span>
+              </li>
+              <li class="discipline-item">
+                <span class="bullet">•</span>
+                <span class="text">Projects</span>
+              </li>
+              <li class="discipline-item">
+                <span class="bullet">•</span>
+                <span class="text">Let's Connect</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- About Section with Scramble Effect (Revealed after canvas scroll) -->
+      <div class="about-section" id="about-section">
+        <p class="about-para scramble-text" data-delay="0">I’m a UI/UX designer with over 2 years of experience shipping digital products. Driven by an engineering background, I explore how systematic design communicates complex ideas and builds cohesive user experiences.</p>
+        <p class="about-para scramble-text" data-delay="1.0">I help businesses turn ideas into structured digital interfaces. Focused on design systems and atomic components, I approach UI design through structural logic and storytelling to deliver thoughtful, long-term user growth.</p>
+& "C:\Program Files\Git\bin\git.exe" commit -m "Initial commit: Set up website structure"      </div>
+
+      <!-- Experience Section -->
+      <div class="dark-section" id="experience-section">
+        <div class="dark-slide" id="experience-slide">
+          <div class="dark-content">
+            <span class="dark-tag dark-scramble-text" data-delay="0">&gt;&gt; Professional Journey</span>
+            <h2 class="dark-heading dark-scramble-text" data-delay="0.2">WORK EXPERIENCE</h2>
+            
+            <div class="experience-table">
+              <!-- Table Header -->
+              <div class="table-header">
+                <span class="col-date dark-scramble-text" data-delay="0.4">DATE</span>
+                <span class="col-company dark-scramble-text" data-delay="0.5">COMPANY</span>
+                <span class="col-role dark-scramble-text" data-delay="0.6">ROLE</span>
+                <span class="col-arrow"></span>
+              </div>
+              
+              <!-- Table Rows -->
+              <div class="table-row" onclick="this.classList.toggle('expanded')">
+                <div class="row-main">
+                  <span class="col-date dark-scramble-text" data-delay="0.7">2025 – Present</span>
+                  <span class="col-company dark-scramble-text" data-delay="0.8">Porlob Technology</span>
+                  <span class="col-role dark-scramble-text" data-delay="0.9">Sr. UI/UX Designer</span>
+                  <span class="col-arrow"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                </div>
+                <div class="row-details">
+                  <p class="details-text">Led design across 6+ client products, delivering 230+ screens. Engineered cohesive design systems reducing developer styling efforts by ~70%. Mentored interns and integrated AI workflows to accelerate visual asset delivery.</p>
+                </div>
+              </div>
+
+              <div class="table-row" onclick="this.classList.toggle('expanded')">
+                <div class="row-main">
+                  <span class="col-date dark-scramble-text" data-delay="1.0">2023 – 2025</span>
+                  <span class="col-company dark-scramble-text" data-delay="1.1">Binated Inc.</span>
+                  <span class="col-role dark-scramble-text" data-delay="1.2">UI/UX Developer</span>
+                  <span class="col-arrow"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                </div>
+                <div class="row-details">
+                  <p class="details-text">Designed user dashboards and built functional frontends using Laravel PHP and FilamentPHP. Standardized interfaces using UI components to ensure visual consistency and minimize engineering time.</p>
+                </div>
+              </div>
+
+              <div class="table-row" onclick="this.classList.toggle('expanded')">
+                <div class="row-main">
+                  <span class="col-date dark-scramble-text" data-delay="1.3">2019</span>
+                  <span class="col-company dark-scramble-text" data-delay="1.4">Rave Technology</span>
+                  <span class="col-role dark-scramble-text" data-delay="1.5">Website Tester Intern</span>
+                  <span class="col-arrow"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                </div>
+                <div class="row-details">
+                  <p class="details-text">Conducted usability and functional testing for high-traffic web applications like Trivago and Bewakoof. Wrote automated test scripts using Selenium to streamline regression workflows.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Section (Circular white background overlay) -->
+      <div class="stats-section" id="stats-section">
+        <div class="dark-slide" id="stats-slide">
+          <div class="dark-content">
+            <span class="stats-tag dark-scramble-text" data-delay="0">&gt;&gt; Performance Metrics</span>
+            <h2 class="stats-heading dark-scramble-text" data-delay="0.2">BY THE NUMBERS</h2>
+            
+            <div class="stats-large-grid">
+              <div class="stat-large-card">
+                <span class="stat-num dark-scramble-text" data-delay="0.4">03</span>
+                <span class="stat-label dark-scramble-text" data-delay="0.5">Years of Experience</span>
+              </div>
+              <div class="stat-large-card">
+                <span class="stat-num dark-scramble-text" data-delay="0.6">10+</span>
+                <span class="stat-label dark-scramble-text" data-delay="0.7">Clients Worked For</span>
+              </div>
+              <div class="stat-large-card">
+                <span class="stat-num dark-scramble-text" data-delay="0.8">02</span>
+                <span class="stat-label dark-scramble-text" data-delay="0.9">Brand Logos Created</span>
+              </div>
+              <div class="stat-large-card">
+                <span class="stat-num dark-scramble-text" data-delay="1.0">∞</span>
+                <span class="stat-label dark-scramble-text" data-delay="1.1">Coffees Consumed</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
+
+
