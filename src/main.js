@@ -9,7 +9,7 @@ gsap.registerPlugin(ScrollTrigger);
 // Configuration for frame sequence
 const frameCount = 348;
 const startIndex = 1;
-const currentFramePath = (index) => `/frames/My Intro-${String(index).padStart(5, '0')}.jpg`;
+const currentFramePath = (index) => `${import.meta.env.BASE_URL}frames/My Intro-${String(index).padStart(5, '0')}.jpg`;
 
 // Array to hold preloaded Image objects
 const images = [];
