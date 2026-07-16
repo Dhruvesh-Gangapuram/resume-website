@@ -56,6 +56,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // 3. Right Side Menu Hover
   setupDisciplinesHover();
   setupMenuClickScrolling();
+  setupFooterClickScrolling();
 
   // 3b. Setup Copy Link Action for Contact Email
   setupEmailCopy();
@@ -242,6 +243,11 @@ function setupDisciplinesHover() {
 
 // Preload the JPEGs into browser memory
 function preloadFrames(onComplete) {
+  if (window.innerWidth <= 991) {
+    // Skip heavy frame preloading on mobile to save bandwidth and load instantly
+    onComplete();
+    return;
+  }
   let loadedCount = 0;
   
   for (let i = 0; i < frameCount; i++) {
@@ -283,6 +289,8 @@ function drawCoverImage(canvas, context, img) {
     y = 0; // Pin to top
   }
 
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = 'high';
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.drawImage(img, x, y, drawWidth, drawHeight);
 }
@@ -335,7 +343,7 @@ function setupScrollScrub() {
         id: 'main-scroll',
         trigger: '.main-content',
         start: 'top top',
-        end: '+=680%', // Extended scroll range for contact section transitions
+        end: '+=780%', // Extended scroll range for stretched smooth timeline
         scrub: 2.2, // Higher lag for massive fluid inertia
         pin: true,
         anticipatePin: 1,
@@ -352,13 +360,12 @@ function setupScrollScrub() {
     });
 
     // Phase 1: Forward Frame Scrub (character moves to left)
-    // Time: 0 to 1
+    // Time: 0 to 2.0 (Stretched for smooth video feel)
     scrollTL.to(sequence, {
       frame: frameCount - 1,
-      snap: 'frame',
       ease: 'none', // Linear response with scrub lag-follow provides the video feel
       onUpdate: () => {
-        const activeImg = images[sequence.frame];
+        const activeImg = images[Math.round(sequence.frame)];
         if (activeImg) {
           drawCoverImage(canvas, context, activeImg);
         }
@@ -368,22 +375,22 @@ function setupScrollScrub() {
     // Fade out left text panel
     scrollTL.fromTo('.grid-left-side', 
       { opacity: 1, y: 0 },
-      { opacity: 0, y: -40, duration: 0.8, ease: 'power1.out' },
+      { opacity: 0, y: -40, duration: 0.4, ease: 'power1.out' },
       0
     );
 
     // Fade out right disciplines list
     scrollTL.fromTo('.grid-right-side', 
       { opacity: 1, x: 0, y: 0 },
-      { opacity: 0, y: -40, duration: 0.8, ease: 'power1.out' },
+      { opacity: 0, y: -40, duration: 0.4, ease: 'power1.out' },
       0
     );
 
-    // Phase 2: Fade in About Section & Scramble (starts exactly as hero fades out at 0.8)
+    // Phase 2: Fade in About Section & Scramble (starts exactly as hero fades out at 1.6)
     scrollTL.to('.about-section', {
       opacity: 1,
       y: 0,
-      duration: 0.4,
+      duration: 0.6,
       ease: 'power1.out',
       onStart: () => {
         document.getElementById('about-section')?.classList.add('active');
@@ -392,9 +399,9 @@ function setupScrollScrub() {
       onReverseComplete: () => {
         document.getElementById('about-section')?.classList.remove('active');
       }
-    }, 0.8);
+    }, 1.6);
 
-    // Phase 3: Trigger Experience Circular Transition on Scroll (one-shot trigger at 1.8)
+    // Phase 3: Trigger Experience Circular Transition on Scroll (one-shot trigger at 2.8)
     scrollTL.call(() => {
       const isForward = scrollTL.scrollTrigger.direction === 1;
       if (isForward) {
@@ -402,9 +409,9 @@ function setupScrollScrub() {
       } else {
         reverseExperienceTransition();
       }
-    }, null, 1.8);
+    }, null, 2.8);
 
-    // Phase 4: Trigger Stats Circular Transition on Scroll (one-shot trigger at 2.2)
+    // Phase 4: Trigger Stats Circular Transition on Scroll (one-shot trigger at 3.2)
     scrollTL.call(() => {
       const isForward = scrollTL.scrollTrigger.direction === 1;
       if (isForward) {
@@ -412,14 +419,14 @@ function setupScrollScrub() {
       } else {
         reverseStatsTransition();
       }
-    }, null, 2.2);
+    }, null, 3.2);
 
     // Phase 5: Normal scroll Stats section goes up, Projects section comes from down
     scrollTL.to(['#stats-section', '#experience-section'], {
       y: '-100vh',
       duration: 1.0,
       ease: 'power2.inOut'
-    }, 2.6);
+    }, 3.6);
 
     scrollTL.to('#projects-section', {
       y: '0',
@@ -432,9 +439,9 @@ function setupScrollScrub() {
       onReverseComplete: () => {
         document.getElementById('projects-section')?.classList.remove('active');
       }
-    }, 2.6);
+    }, 3.6);
 
-    // Stacked projects scrolling inside the timeline (starts from 3.8 and runs till 6.0)
+    // Stacked projects scrolling inside the timeline (starts from 4.8 and runs till 7.0)
     scrollTL.to('.projects-list-wrapper', {
       y: () => {
         const wrapper = document.querySelector('.projects-list-wrapper');
@@ -449,7 +456,7 @@ function setupScrollScrub() {
       },
       ease: 'none',
       duration: 2.2
-    }, 3.8);
+    }, 4.8);
 
     // Divider lines drawing (starts after section slides in)
     scrollTL.to('.project-divider-line', {
@@ -457,7 +464,7 @@ function setupScrollScrub() {
       stagger: 0.5,
       ease: 'power1.out',
       duration: 1.5
-    }, 3.6);
+    }, 4.6);
 
     // Phase 6: Slide in contact section over projects section
     scrollTL.to('#contact-section', {
@@ -470,7 +477,7 @@ function setupScrollScrub() {
       onReverseComplete: () => {
         document.getElementById('contact-section')?.classList.remove('active');
       }
-    }, 6.0);
+    }, 7.0);
   });
 
   // 2. Mobile Layout (<= 991px)
@@ -587,10 +594,15 @@ function onVideoFinished() {
 
   const bgVideo = document.getElementById('bg-video');
   if (bgVideo) {
-    bgVideo.style.opacity = 0;
-    setTimeout(() => {
-      bgVideo.style.display = 'none';
-    }, 800);
+    if (window.innerWidth > 991) {
+      bgVideo.style.opacity = 0;
+      setTimeout(() => {
+        bgVideo.style.display = 'none';
+      }, 800);
+    } else {
+      // On mobile, keep the video element visible (paused on its last frame) as the background graphic
+      bgVideo.pause();
+    }
   }
 
   // Setup scroll scrubbing and animate hero contents
@@ -1099,18 +1111,18 @@ function updateActiveMenu(progress) {
   // Clear active class from all
   items.forEach(i => i.classList.remove('active'));
 
-  // Map progress to active index based on timeline keyframe positions
-  const time = progress * 7.0;
+  // Map progress to active index based on timeline keyframe positions (8.0 total)
+  const time = progress * 8.0;
 
-  if (time < 0.8) {
+  if (time < 1.6) {
+    items[0].classList.add('active'); // About (Hero before it fades out, but we map to About)
+  } else if (time >= 1.6 && time < 2.8) {
     items[0].classList.add('active'); // About
-  } else if (time >= 0.8 && time < 1.8) {
-    items[0].classList.add('active'); // About
-  } else if (time >= 1.8 && time < 2.2) {
+  } else if (time >= 2.8 && time < 3.2) {
     items[1].classList.add('active'); // Experience
-  } else if (time >= 2.2 && time < 2.6) {
+  } else if (time >= 3.2 && time < 3.6) {
     items[2].classList.add('active'); // Stats
-  } else if (time >= 2.6 && time < 6.0) {
+  } else if (time >= 3.6 && time < 7.0) {
     items[3].classList.add('active'); // Projects
   } else {
     items[4].classList.add('active'); // Let's Connect
@@ -1126,14 +1138,14 @@ function setupMenuClickScrolling() {
 
     item.addEventListener('click', () => {
       if (window.innerWidth > 991) {
-        // Desktop scroll trigger timeline mapping
-        const targetTimes = [0.8, 1.8, 2.2, 3.8, 6.0];
+        // Desktop scroll trigger timeline mapping (8.0 scale)
+        const targetTimes = [1.8, 3.0, 3.4, 5.5, 7.5];
         const targetTime = targetTimes[index];
         const st = ScrollTrigger.getById('main-scroll');
         if (st) {
-          const targetScroll = st.start + (targetTime / 7.0) * (st.end - st.start);
+          const targetScroll = st.start + (targetTime / 8.0) * (st.end - st.start);
           if (lenisInstance) {
-            lenisInstance.scrollTo(targetScroll, { duration: 1.5 });
+            lenisInstance.scrollTo(targetScroll, { duration: 0.8 });
           } else {
             window.scrollTo({ top: targetScroll, behavior: 'smooth' });
           }
@@ -1161,6 +1173,57 @@ function setupMenuClickScrolling() {
   });
 }
 
+function setupFooterClickScrolling() {
+  const links = document.querySelectorAll('.footer-links-col:first-child a');
+  links.forEach((link, index) => {
+    link.addEventListener('click', (e) => {
+      // Index mapping: 0 -> Home, 1 -> About, 2 -> Experience, 3 -> Projects
+      if (index === 0) {
+        e.preventDefault();
+        if (lenisInstance) {
+          lenisInstance.scrollTo(0, { duration: 1.2 });
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        return;
+      }
+      
+      e.preventDefault();
+      if (window.innerWidth > 991) {
+        // Desktop scroll trigger timeline mapping
+        const targetTimes = [0, 1.8, 3.0, 5.5];
+        const targetTime = targetTimes[index];
+        const st = ScrollTrigger.getById('main-scroll');
+        if (st) {
+          const targetScroll = st.start + (targetTime / 8.0) * (st.end - st.start);
+          if (lenisInstance) {
+            lenisInstance.scrollTo(targetScroll, { duration: 1.2 });
+          } else {
+            window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+          }
+        }
+      } else {
+        // Mobile simple element offsets scrolling
+        const targetIds = [
+          'body',
+          '#about-section',
+          '#experience-section',
+          '#projects-section'
+        ];
+        const targetId = targetIds[index];
+        const el = document.querySelector(targetId);
+        if (el) {
+          if (lenisInstance) {
+            lenisInstance.scrollTo(el, { duration: 1.2 });
+          } else {
+            el.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+      }
+    });
+  });
+}
+
 export function reverseExperienceTransition() {
   if (!experienceTriggered) return;
   experienceTriggered = false;
@@ -1170,6 +1233,9 @@ export function reverseExperienceTransition() {
     document.body.classList.remove('cursor-white');
     document.body.classList.remove('nav-white');
 
+    const originX = globalMouseX;
+    const originY = globalMouseY;
+
     const revealObj = { radius: Math.max(window.innerWidth, window.innerHeight) * 1.5 };
 
     gsap.to(revealObj, {
@@ -1177,7 +1243,7 @@ export function reverseExperienceTransition() {
       duration: 1.2,
       ease: 'power3.inOut',
       onUpdate: () => {
-        darkSection.style.clipPath = `circle(${revealObj.radius}px at ${experienceOriginX}px ${experienceOriginY}px)`;
+        darkSection.style.clipPath = `circle(${revealObj.radius}px at ${originX}px ${originY}px)`;
       },
       onComplete: () => {
         darkSection.classList.remove('active');
@@ -1196,6 +1262,9 @@ export function reverseStatsTransition() {
     document.body.classList.add('cursor-white');
     document.body.classList.add('nav-white');
 
+    const originX = globalMouseX;
+    const originY = globalMouseY;
+
     const revealObj = { radius: Math.max(window.innerWidth, window.innerHeight) * 1.5 };
 
     gsap.to(revealObj, {
@@ -1203,7 +1272,7 @@ export function reverseStatsTransition() {
       duration: 1.2,
       ease: 'power3.inOut',
       onUpdate: () => {
-        statsSection.style.clipPath = `circle(${revealObj.radius}px at ${statsOriginX}px ${statsOriginY}px)`;
+        statsSection.style.clipPath = `circle(${revealObj.radius}px at ${originX}px ${originY}px)`;
       },
       onComplete: () => {
         statsSection.classList.remove('active');

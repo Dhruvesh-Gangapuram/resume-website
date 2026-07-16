@@ -469,6 +469,8 @@ body.cursor-white .custom-cursor.hovered {
   transform: translateY(-50%);
   width: 50%;
   max-width: 50%;
+  padding-right: 4rem;
+  box-sizing: border-box;
   z-index: 5;
   opacity: 0;
   pointer-events: none;
@@ -504,6 +506,17 @@ body.cursor-white .custom-cursor.hovered {
 
 .scramble-char.scrambled {
   font-family: monospace !important; /* Forces monospace width during scramble to prevent layout shakes */
+}
+
+/* About Section scramble overrides (Gray background, black resolved) */
+#about-section .scramble-char.scrambled {
+  color: #8e8e93 !important; /* Visible gray when scrambling */
+}
+#about-section .scramble-char.highlight {
+  color: var(--accent-color) !important; /* Flash primary accent red on resolve for .3s */
+}
+#about-section .scramble-char.resolved {
+  color: var(--text-primary) !important; /* Settle to black */
 }
 
 /* Experience Section scramble override (Red background) */
@@ -1539,7 +1552,7 @@ body.nav-white .logo {
 
 /* Skip Intro button */
 .skip-video-btn {
-  position: absolute;
+  position: fixed;
   bottom: 3rem;
   right: 4rem;
   background: rgba(255, 255, 255, 0.08);
