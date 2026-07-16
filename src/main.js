@@ -51,6 +51,20 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // 3. Right Side Menu Hover
   setupDisciplinesHover();
+  setupMenuClickScrolling();
+
+  // 3b. Setup Copy Link Action for Contact Email
+  setupEmailCopy();
+
+  // 3c. Setup Skip Intro Button Click Handler
+  const skipBtn = document.getElementById('skip-video-btn');
+  if (skipBtn) {
+    skipBtn.addEventListener('click', () => {
+      const bgVideo = document.getElementById('bg-video');
+      if (bgVideo) bgVideo.pause();
+      onVideoFinished();
+    });
+  }
 
   // 4. Preload Images & Sync with Video loading
   let videoReady = false;
@@ -101,7 +115,10 @@ window.addEventListener('DOMContentLoaded', () => {
               // Start background video intro
               const bgVideo = document.getElementById('bg-video');
               if (bgVideo) {
-                bgVideo.play().catch(err => {
+                bgVideo.play().then(() => {
+                  const skipBtn = document.getElementById('skip-video-btn');
+                  if (skipBtn) skipBtn.classList.add('visible');
+                }).catch(err => {
                   console.log("Autoplay was prevented, playing on user gesture", err);
                   onVideoFinished();
                 });
@@ -114,7 +131,10 @@ window.addEventListener('DOMContentLoaded', () => {
           if (loaderScreen) loaderScreen.style.display = 'none';
           const bgVideo = document.getElementById('bg-video');
           if (bgVideo) {
-            bgVideo.play().catch(err => {
+            bgVideo.play().then(() => {
+              const skipBtn = document.getElementById('skip-video-btn');
+              if (skipBtn) skipBtn.classList.add('visible');
+            }).catch(err => {
               console.log(err);
               onVideoFinished();
             });
@@ -271,106 +291,253 @@ function setupScrollScrub() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
+  // Animating object parameter for GSAP
+  const sequence = { frame: 0 };
+
   // Handle window resizing
   window.addEventListener('resize', () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    const currentFrameIndex = Math.round(sequence.frame);
-    if (images[currentFrameIndex]) {
-      drawCoverImage(canvas, context, images[currentFrameIndex]);
+    if (window.innerWidth > 991) {
+      const currentFrameIndex = Math.round(sequence.frame);
+      if (images[currentFrameIndex]) {
+        drawCoverImage(canvas, context, images[currentFrameIndex]);
+      }
     }
   });
 
-  // Render first frame immediately
-  if (images[0]) {
+  // Render first frame immediately (only on desktop where it's needed)
+  if (images[0] && window.innerWidth > 991) {
     images[0].onload = () => drawCoverImage(canvas, context, images[0]);
     if (images[0].complete) {
       drawCoverImage(canvas, context, images[0]);
     }
   }
 
-  // Animating object parameter for GSAP
-  const sequence = { frame: 0 };
+  // GSAP Responsive Media Queries
+  const mm = gsap.matchMedia();
 
-  // GSAP ScrollTrigger Timeline
-  const scrollTL = gsap.timeline({
-    scrollTrigger: {
-      id: 'main-scroll',
-      trigger: '.main-content',
-      start: 'top top',
-      end: '+=300%', // Longer scroll for ultra-fine frame control
-      scrub: 2.2, // Higher lag for massive fluid inertia
-      pin: true,
-      anticipatePin: 1,
-      onUpdate: (self) => {
-        // If user scrolls down while video is playing, force-hide the video
-        const bgVideo = document.getElementById('bg-video');
-        if (bgVideo && self.progress > 0.02 && bgVideo.style.display !== 'none') {
-          bgVideo.pause();
-          onVideoFinished();
+  // 1. Desktop Layout (> 991px)
+  mm.add("(min-width: 992px)", () => {
+    // Show canvas back on resize/reload
+    gsap.set(canvas, { display: 'block' });
+
+    // GSAP ScrollTrigger Timeline
+    const scrollTL = gsap.timeline({
+      scrollTrigger: {
+        id: 'main-scroll',
+        trigger: '.main-content',
+        start: 'top top',
+        end: '+=680%', // Extended scroll range for contact section transitions
+        scrub: 2.2, // Higher lag for massive fluid inertia
+        pin: true,
+        anticipatePin: 1,
+        onUpdate: (self) => {
+          updateActiveMenu(self.progress);
+          // If user scrolls down while video is playing, force-hide the video
+          const bgVideo = document.getElementById('bg-video');
+          if (bgVideo && self.progress > 0.02 && bgVideo.style.display !== 'none') {
+            bgVideo.pause();
+            onVideoFinished();
+          }
         }
       }
-    }
+    });
+
+    // Phase 1: Forward Frame Scrub (character moves to left)
+    // Time: 0 to 1
+    scrollTL.to(sequence, {
+      frame: frameCount - 1,
+      snap: 'frame',
+      ease: 'none', // Linear response with scrub lag-follow provides the video feel
+      onUpdate: () => {
+        const activeImg = images[sequence.frame];
+        if (activeImg) {
+          drawCoverImage(canvas, context, activeImg);
+        }
+      }
+    }, 0);
+
+    // Fade out left text panel (keep menu visible since it's fixed now)
+    scrollTL.fromTo('.grid-left-side', 
+      { opacity: 1, y: 0 },
+      { opacity: 0, y: -40, duration: 0.8, ease: 'power1.out' },
+      0
+    );
+
+    // Phase 2: Fade in About Section & Scramble (starts exactly as hero fades out at 0.8)
+    scrollTL.to('.about-section', {
+      opacity: 1,
+      y: 0,
+      duration: 0.4,
+      ease: 'power1.out',
+      onStart: () => {
+        document.getElementById('about-section')?.classList.add('active');
+        triggerAboutScramble();
+      },
+      onReverseComplete: () => {
+        document.getElementById('about-section')?.classList.remove('active');
+      }
+    }, 0.8);
+
+    // Phase 3: Trigger Experience Circular Transition on Scroll (one-shot trigger at 1.8)
+    scrollTL.call(() => {
+      const isForward = scrollTL.scrollTrigger.direction === 1;
+      if (isForward) {
+        triggerExperienceTransition();
+      } else {
+        reverseExperienceTransition();
+      }
+    }, null, 1.8);
+
+    // Phase 4: Trigger Stats Circular Transition on Scroll (one-shot trigger at 2.2)
+    scrollTL.call(() => {
+      const isForward = scrollTL.scrollTrigger.direction === 1;
+      if (isForward) {
+        triggerStatsTransition();
+      } else {
+        reverseStatsTransition();
+      }
+    }, null, 2.2);
+
+    // Phase 5: Normal scroll Stats section goes up, Projects section comes from down
+    scrollTL.to(['#stats-section', '#experience-section'], {
+      y: '-100vh',
+      duration: 1.0,
+      ease: 'power2.inOut'
+    }, 2.6);
+
+    scrollTL.to('#projects-section', {
+      y: '0',
+      duration: 1.0,
+      ease: 'power2.inOut',
+      onStart: () => {
+        document.getElementById('projects-section')?.classList.add('active');
+        triggerProjectsScramble();
+      },
+      onReverseComplete: () => {
+        document.getElementById('projects-section')?.classList.remove('active');
+      }
+    }, 2.6);
+
+    // Stacked projects scrolling inside the timeline (starts from 3.8 and runs till 6.0)
+    scrollTL.to('.projects-list-wrapper', {
+      y: () => {
+        const wrapper = document.querySelector('.projects-list-wrapper');
+        if (!wrapper) return 0;
+        const scrollHeight = wrapper.scrollHeight;
+        const viewportHeight = window.innerHeight;
+        
+        // Calculate how much content overflows the viewport including bottom padding
+        const travelDistance = scrollHeight - viewportHeight + 120;
+        
+        return travelDistance > 0 ? -travelDistance : 0;
+      },
+      ease: 'none',
+      duration: 2.2
+    }, 3.8);
+
+    // Divider lines drawing (starts after section slides in)
+    scrollTL.to('.project-divider-line', {
+      width: '100%',
+      stagger: 0.5,
+      ease: 'power1.out',
+      duration: 1.5
+    }, 3.6);
+
+    // Phase 6: Slide in contact section over projects section
+    scrollTL.to('#contact-section', {
+      y: '0',
+      duration: 1.0,
+      ease: 'power2.inOut',
+      onStart: () => {
+        document.getElementById('contact-section')?.classList.add('active');
+      },
+      onReverseComplete: () => {
+        document.getElementById('contact-section')?.classList.remove('active');
+      }
+    }, 6.0);
   });
 
-  // Phase 1: Forward Frame Scrub (character moves to left)
-  // Time: 0 to 1
-  scrollTL.to(sequence, {
-    frame: frameCount - 1,
-    snap: 'frame',
-    ease: 'none', // Linear response with scrub lag-follow provides the video feel
-    onUpdate: () => {
-      const activeImg = images[sequence.frame];
-      if (activeImg) {
-        drawCoverImage(canvas, context, activeImg);
+  // 2. Mobile Layout (<= 991px)
+  mm.add("(max-width: 991px)", () => {
+    // Hide canvas on mobile, let video handle background or show nothing
+    gsap.set(canvas, { display: 'none' });
+
+    // Reveal Hero left and right sections immediately
+    gsap.set('.grid-left-side', { opacity: 1, y: 0 });
+    gsap.set('.grid-right-side', { opacity: 1, x: 0, y: 0 });
+
+    // Reveal About section on scroll
+    gsap.fromTo('.about-section', 
+      { opacity: 0, y: 30 },
+      {
+        opacity: 1,
+        y: 0,
+        scrollTrigger: {
+          trigger: '.about-section',
+          start: 'top 85%',
+          once: true,
+          onStart: () => triggerAboutScramble()
+        }
       }
-    }
-  }, 0);
+    );
 
-  // Fade out left text panel
-  scrollTL.fromTo('.grid-left-side', 
-    { opacity: 1, y: 0 },
-    { opacity: 0, y: -40, duration: 0.8, ease: 'power1.out' },
-    0
-  );
+    // Scramble Experience on scroll
+    ScrollTrigger.create({
+      trigger: '#experience-section',
+      start: 'top 75%',
+      once: true,
+      onEnter: () => triggerExperienceScramble()
+    });
 
-  // Fade out right disciplines list
-  scrollTL.fromTo('.grid-right-side', 
-    { opacity: 1, x: 0, y: 0 },
-    { opacity: 0, y: -40, duration: 0.8, ease: 'power1.out' },
-    0
-  );
+    // Scramble Stats on scroll
+    ScrollTrigger.create({
+      trigger: '#stats-section',
+      start: 'top 75%',
+      once: true,
+      onEnter: () => triggerStatsScramble()
+    });
 
-  // Phase 2: Fade in About Section & Scramble (starts exactly as hero fades out at 0.8)
-  scrollTL.to('.about-section', {
-    opacity: 1,
-    y: 0,
-    duration: 0.4,
-    ease: 'power1.out',
-    onStart: () => {
-      document.getElementById('about-section')?.classList.add('active');
-      triggerAboutScramble();
-    },
-    onReverseComplete: () => {
-      document.getElementById('about-section')?.classList.remove('active');
-    }
-  }, 0.8);
+    // Reveal Projects on scroll
+    ScrollTrigger.create({
+      trigger: '#projects-section',
+      start: 'top 75%',
+      once: true,
+      onEnter: () => {
+        triggerProjectsScramble();
+        gsap.to('.project-divider-line', {
+          width: '100%',
+          stagger: 0.2,
+          ease: 'power1.out',
+          duration: 1.0
+        });
+      }
+    });
 
-  // Phase 3: Trigger Experience Circular Transition on Scroll (one-shot trigger at 1.8)
-  scrollTL.call(() => {
-    const isForward = scrollTL.scrollTrigger.direction === 1;
-    if (isForward) {
-      triggerExperienceTransition();
-    }
-  }, null, 1.8);
-
-  // Phase 4: Trigger Stats Circular Transition on Scroll (one-shot trigger at 2.2)
-  scrollTL.call(() => {
-    const isForward = scrollTL.scrollTrigger.direction === 1;
-    if (isForward) {
-      triggerStatsTransition();
-    }
-  }, null, 2.2);
+    // Setup active state toggles on mobile scroll
+    const targetIds = [
+      '#about-section',
+      '#experience-section',
+      '#stats-section',
+      '#projects-section',
+      '#contact-section'
+    ];
+    targetIds.forEach((id, index) => {
+      ScrollTrigger.create({
+        trigger: id,
+        start: 'top 50%',
+        end: 'bottom 50%',
+        onToggle: (self) => {
+          if (self.isActive && window.innerWidth <= 991) {
+            const items = document.querySelectorAll('.discipline-item');
+            items.forEach(i => i.classList.remove('active'));
+            items[index]?.classList.add('active');
+          }
+        }
+      });
+    });
+  });
 }
 
 // Listen to video ended event to fade out video and reveal canvas
@@ -396,6 +563,14 @@ function setupVideoTransition() {
 
 // Logic triggered when intro video is complete or skipped
 function onVideoFinished() {
+  const skipBtn = document.getElementById('skip-video-btn');
+  if (skipBtn) {
+    skipBtn.classList.remove('visible');
+    setTimeout(() => {
+      try { skipBtn.remove(); } catch (e) {}
+    }, 500);
+  }
+
   const bgVideo = document.getElementById('bg-video');
   if (bgVideo) {
     bgVideo.style.opacity = 0;
@@ -657,8 +832,9 @@ export function triggerExperienceTransition() {
     const originX = globalMouseX;
     const originY = globalMouseY;
 
-    // Make custom cursor white on transition trigger
+    // Make custom cursor and navigation white on transition trigger
     document.body.classList.add('cursor-white');
+    document.body.classList.add('nav-white');
 
     // Safe numerical animation object for radius to prevent string parsing issues in GSAP
     const revealObj = { radius: 0 };
@@ -687,7 +863,7 @@ function triggerExperienceScramble() {
   }
 
   // Fade in content
-  gsap.fromTo('.dark-content',
+  gsap.fromTo('#experience-slide .dark-content',
     { opacity: 0, y: 30 },
     { opacity: 1, y: 0, duration: 1.0, ease: 'power3.out' }
   );
@@ -723,8 +899,9 @@ export function triggerStatsTransition() {
     lenisInstance.stop();
   }
 
-  // Restore custom cursor back to primary color on light background
+  // Restore custom cursor and navigation back to primary color on light background
   document.body.classList.remove('cursor-white');
+  document.body.classList.remove('nav-white');
 
   const statsSection = document.getElementById('stats-section');
   if (statsSection) {
@@ -781,4 +958,220 @@ function triggerStatsScramble() {
     ctrl.resolve(); // Resolves after the delay
     return ctrl;
   });
+}
+
+let projectsScrambleControllers = [];
+let projectsTriggered = false;
+
+function triggerProjectsScramble() {
+  if (projectsTriggered) return;
+  projectsTriggered = true;
+
+  // Temporarily lock scroll during transition reveal
+  if (lenisInstance) {
+    lenisInstance.stop();
+  }
+
+  const scrambleElements = Array.from(document.querySelectorAll('#projects-slide .dark-scramble-text'));
+  if (scrambleElements.length === 0) {
+    if (lenisInstance) lenisInstance.start();
+    return;
+  }
+
+  // Fade in projects content
+  gsap.fromTo('#projects-slide .dark-content',
+    { opacity: 0, y: 30 },
+    { opacity: 1, y: 0, duration: 1.0, ease: 'power3.out' }
+  );
+
+  const lastIndex = scrambleElements.length - 1;
+
+  projectsScrambleControllers = scrambleElements.map((el, index) => {
+    const delay = 0.8 + (index * 0.05); // Scramble then resolve with stagger
+    const isLast = index === lastIndex;
+
+    const ctrl = createScrambleController(el, delay, isLast ? () => {
+      // Unlock scroll once everything is resolved
+      if (lenisInstance) {
+        lenisInstance.start();
+      }
+    } : null);
+
+    ctrl.scramble(); // Start cycling random characters immediately
+    ctrl.resolve(); // Resolves after the delay
+    return ctrl;
+  });
+}
+
+function showCopyNotification() {
+  const existing = document.getElementById('copy-notification');
+  if (existing) existing.remove();
+
+  const notification = document.createElement('div');
+  notification.id = 'copy-notification';
+  notification.className = 'copy-notification';
+  notification.innerHTML = `
+    <div class="copy-notification-content">
+      <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+      <span>Mail copied to clipboard</span>
+    </div>
+  `;
+
+  document.body.appendChild(notification);
+
+  // GSAP Animate In
+  gsap.fromTo(notification, 
+    { y: -30, opacity: 0 },
+    { y: 0, opacity: 1, duration: 0.4, ease: 'power3.out' }
+  );
+
+  // Auto disappear after 5s (5000ms)
+  setTimeout(() => {
+    gsap.to(notification, {
+      y: -20,
+      opacity: 0,
+      duration: 0.4,
+      ease: 'power3.in',
+      onComplete: () => {
+        notification.remove();
+      }
+    });
+  }, 5000);
+}
+
+function setupEmailCopy() {
+  const emailLink = document.querySelector('.contact-email');
+  if (!emailLink) return;
+
+  emailLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    const emailText = 'gangapuramdhruvesh@gmail.com';
+    navigator.clipboard.writeText(emailText).then(() => {
+      showCopyNotification();
+    }).catch(err => {
+      console.error('Failed to copy text: ', err);
+    });
+  });
+}
+
+function updateActiveMenu(progress) {
+  const items = document.querySelectorAll('.discipline-item');
+  if (items.length === 0) return;
+
+  // Clear active class from all
+  items.forEach(i => i.classList.remove('active'));
+
+  // Map progress to active index based on timeline keyframe positions
+  const time = progress * 7.0;
+
+  if (time < 0.8) {
+    items[0].classList.add('active'); // About
+  } else if (time >= 0.8 && time < 1.8) {
+    items[0].classList.add('active'); // About
+  } else if (time >= 1.8 && time < 2.2) {
+    items[1].classList.add('active'); // Experience
+  } else if (time >= 2.2 && time < 2.6) {
+    items[2].classList.add('active'); // Stats
+  } else if (time >= 2.6 && time < 6.0) {
+    items[3].classList.add('active'); // Projects
+  } else {
+    items[4].classList.add('active'); // Let's Connect
+  }
+}
+
+function setupMenuClickScrolling() {
+  const items = document.querySelectorAll('.discipline-item');
+  items.forEach((item, index) => {
+    item.style.cursor = 'pointer';
+    const textNode = item.querySelector('.text');
+    if (textNode) textNode.style.cursor = 'pointer';
+
+    item.addEventListener('click', () => {
+      if (window.innerWidth > 991) {
+        // Desktop scroll trigger timeline mapping
+        const targetTimes = [0.8, 1.8, 2.2, 3.8, 6.0];
+        const targetTime = targetTimes[index];
+        const st = ScrollTrigger.getById('main-scroll');
+        if (st) {
+          const targetScroll = st.start + (targetTime / 7.0) * (st.end - st.start);
+          if (lenisInstance) {
+            lenisInstance.scrollTo(targetScroll, { duration: 1.5 });
+          } else {
+            window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+          }
+        }
+      } else {
+        // Mobile simple element offsets scrolling
+        const targetIds = [
+          '#about-section',
+          '#experience-section',
+          '#stats-section',
+          '#projects-section',
+          '#contact-section'
+        ];
+        const targetId = targetIds[index];
+        const el = document.querySelector(targetId);
+        if (el) {
+          if (lenisInstance) {
+            lenisInstance.scrollTo(el, { duration: 1.5 });
+          } else {
+            el.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+      }
+    });
+  });
+}
+
+export function reverseExperienceTransition() {
+  if (!experienceTriggered) return;
+  experienceTriggered = false;
+
+  const darkSection = document.getElementById('experience-section');
+  if (darkSection) {
+    document.body.classList.remove('cursor-white');
+    document.body.classList.remove('nav-white');
+
+    const revealObj = { radius: Math.max(window.innerWidth, window.innerHeight) * 1.5 };
+
+    gsap.to(revealObj, {
+      radius: 0,
+      duration: 1.2,
+      ease: 'power3.inOut',
+      onUpdate: () => {
+        darkSection.style.clipPath = `circle(${revealObj.radius}px at ${window.innerWidth / 2}px ${window.innerHeight / 2}px)`;
+      },
+      onComplete: () => {
+        darkSection.classList.remove('active');
+      }
+    });
+  }
+}
+
+export function reverseStatsTransition() {
+  if (!statsTriggered) return;
+  statsTriggered = false;
+
+  const statsSection = document.getElementById('stats-section');
+  if (statsSection) {
+    // Add custom cursor and nav menu back to white on experience red background
+    document.body.classList.add('cursor-white');
+    document.body.classList.add('nav-white');
+
+    const revealObj = { radius: Math.max(window.innerWidth, window.innerHeight) * 1.5 };
+
+    gsap.to(revealObj, {
+      radius: 0,
+      duration: 1.2,
+      ease: 'power3.inOut',
+      onUpdate: () => {
+        statsSection.style.clipPath = `circle(${revealObj.radius}px at ${window.innerWidth / 2}px ${window.innerHeight / 2}px)`;
+      },
+      onComplete: () => {
+        statsSection.classList.remove('active');
+      }
+    });
+  }
 }
