@@ -395,25 +395,15 @@ body.cursor-white .custom-cursor.hovered {
 
 /* Right column vertical expertise items */
 .grid-right-side {
-  position: fixed;
-  right: 4rem;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 40050;
   display: flex;
   justify-content: flex-end;
+  height: 100%;
   align-items: center;
-  pointer-events: none; /* Let clicks pass through to content underneath */
   opacity: 0;
 }
 
 @media (max-width: 991px) {
   .grid-right-side {
-    position: relative;
-    right: auto;
-    top: auto;
-    transform: none;
-    pointer-events: auto;
     justify-content: flex-start;
     height: auto;
   }
@@ -423,7 +413,6 @@ body.cursor-white .custom-cursor.hovered {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  pointer-events: auto; /* Enable clicks only on the menu itself */
 }
 
 .list-heading {
@@ -1583,4 +1572,61 @@ body.nav-white .logo {
   border-color: rgba(255, 255, 255, 0.4);
   transform: translateY(-2px);
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+}
+
+/* Back to Top Button */
+.back-to-top-btn {
+  position: fixed;
+  bottom: 3rem;
+  right: 4rem;
+  width: 55px;
+  height: 55px;
+  background-color: var(--text-primary);
+  color: var(--bg-color);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 40040;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.back-to-top-btn svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  transition: transform 0.3s ease;
+}
+
+.back-to-top-btn.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.back-to-top-btn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+  background-color: var(--accent-color);
+  color: #ffffff;
+}
+
+.back-to-top-btn:hover svg {
+  transform: translateY(-3px);
+}
+
+/* Dynamic color for Back to Top Button when over red Experience section */
+body.nav-white .back-to-top-btn {
+  background-color: #ffffff !important;
+  color: var(--accent-color) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+body.nav-white .back-to-top-btn:hover {
+  background-color: var(--text-primary) !important;
+  color: #ffffff !important;
 }

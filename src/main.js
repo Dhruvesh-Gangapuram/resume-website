@@ -17,6 +17,10 @@ let framesLoaded = false;
 let lenisInstance;
 let globalMouseX = window.innerWidth / 2;
 let globalMouseY = window.innerHeight / 2;
+let experienceOriginX = window.innerWidth / 2;
+let experienceOriginY = window.innerHeight / 2;
+let statsOriginX = window.innerWidth / 2;
+let statsOriginY = window.innerHeight / 2;
 
 window.addEventListener('DOMContentLoaded', () => {
   // Start Loader Scramble Effect
@@ -173,6 +177,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // 5. Video Playback & Transition logic
   setupVideoTransition();
+
+  // 6. Back to Top Button Click & Scroll Listeners
+  setupBackToTopBtn();
 });
 
 // Custom Cursor Lag-Follow Animation
@@ -358,9 +365,16 @@ function setupScrollScrub() {
       }
     }, 0);
 
-    // Fade out left text panel (keep menu visible since it's fixed now)
+    // Fade out left text panel
     scrollTL.fromTo('.grid-left-side', 
       { opacity: 1, y: 0 },
+      { opacity: 0, y: -40, duration: 0.8, ease: 'power1.out' },
+      0
+    );
+
+    // Fade out right disciplines list
+    scrollTL.fromTo('.grid-right-side', 
+      { opacity: 1, x: 0, y: 0 },
       { opacity: 0, y: -40, duration: 0.8, ease: 'power1.out' },
       0
     );
@@ -655,13 +669,26 @@ function triggerAboutScramble() {
   scrambleControllers.forEach(c => c.stop());
   scrambleControllers = [];
 
+  // Lock scrolling during transition text animation
+  if (lenisInstance) {
+    lenisInstance.stop();
+  }
+
   const paragraphs = Array.from(document.querySelectorAll('.about-section .scramble-text'));
-  if (paragraphs.length === 0) return;
+  if (paragraphs.length === 0) {
+    if (lenisInstance) lenisInstance.start();
+    return;
+  }
 
   // Create paragraph 2 controller and scramble it immediately (if it exists)
   let c2 = null;
   if (paragraphs.length >= 2) {
-    c2 = createScrambleController(paragraphs[1], 0);
+    c2 = createScrambleController(paragraphs[1], 0, () => {
+      // Unlock scroll once paragraph 2 resolves
+      if (lenisInstance) {
+        lenisInstance.start();
+      }
+    });
     scrambleControllers.push(c2);
     c2.scramble(); // Start cycling random characters immediately
   }
@@ -670,6 +697,11 @@ function triggerAboutScramble() {
   const c1 = createScrambleController(paragraphs[0], 0, () => {
     if (c2) {
       c2.resolve(); // Start resolving paragraph 2 once paragraph 1 is complete
+    } else {
+      // Unlock scroll if there's no paragraph 2
+      if (lenisInstance) {
+        lenisInstance.start();
+      }
     }
   });
   scrambleControllers.push(c1);
@@ -831,6 +863,8 @@ export function triggerExperienceTransition() {
     // Record current mouse position at trigger time to keep transition centered
     const originX = globalMouseX;
     const originY = globalMouseY;
+    experienceOriginX = originX;
+    experienceOriginY = originY;
 
     // Make custom cursor and navigation white on transition trigger
     document.body.classList.add('cursor-white');
@@ -908,6 +942,8 @@ export function triggerStatsTransition() {
     // Record current mouse position at trigger time to keep transition centered
     const originX = globalMouseX;
     const originY = globalMouseY;
+    statsOriginX = originX;
+    statsOriginY = originY;
 
     // Safe numerical animation object for radius to prevent string parsing issues in GSAP
     const revealObj = { radius: 0 };
@@ -1141,7 +1177,7 @@ export function reverseExperienceTransition() {
       duration: 1.2,
       ease: 'power3.inOut',
       onUpdate: () => {
-        darkSection.style.clipPath = `circle(${revealObj.radius}px at ${window.innerWidth / 2}px ${window.innerHeight / 2}px)`;
+        darkSection.style.clipPath = `circle(${revealObj.radius}px at ${experienceOriginX}px ${experienceOriginY}px)`;
       },
       onComplete: () => {
         darkSection.classList.remove('active');
@@ -1167,10 +1203,44 @@ export function reverseStatsTransition() {
       duration: 1.2,
       ease: 'power3.inOut',
       onUpdate: () => {
-        statsSection.style.clipPath = `circle(${revealObj.radius}px at ${window.innerWidth / 2}px ${window.innerHeight / 2}px)`;
+        statsSection.style.clipPath = `circle(${revealObj.radius}px at ${statsOriginX}px ${statsOriginY}px)`;
       },
       onComplete: () => {
         statsSection.classList.remove('active');
+      }
+    });
+  }
+}
+
+function setupBackToTopBtn() {
+  const btn = document.getElementById('back-to-top-btn');
+  if (!btn) return;
+
+  // Scroll back to top on click
+  btn.addEventListener('click', () => {
+    if (lenisInstance) {
+      lenisInstance.scrollTo(0, { duration: 1.5 });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
+
+  // Toggle button visibility based on scrolling progress (both desktop & mobile)
+  if (lenisInstance) {
+    lenisInstance.on('scroll', (e) => {
+      // Show back to top button after scrolling past 300px
+      if (e.scroll > 300) {
+        btn.classList.add('visible');
+      } else {
+        btn.classList.remove('visible');
+      }
+    });
+  } else {
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 300) {
+        btn.classList.add('visible');
+      } else {
+        btn.classList.remove('visible');
       }
     });
   }
